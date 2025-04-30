@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AutoCare Buddy</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #E0E0E0;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #90caf9;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #1e1e1e;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    label {
+      display: block;
+      margin: 1rem 0 0.5rem;
+      font-weight: bold;
+      color: #bbdefb;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 10px;
+      border: none;
+      background: #2c2c2c;
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 0.8rem 1.2rem;
+      border: none;
+      background-color: #42a5f5;
+      color: white;
+      font-size: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      margin-top: 0.5rem;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1e88e5;
+    }
+    .chat {
+      margin-top: 2rem;
+      background: #263238;
+      padding: 1.5rem;
+      border-radius: 15px;
+    }
+    .chat strong {
+      color: #fff176;
+    }
+    .chat p {
+      margin: 1rem 0;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>AutoCare Buddy 🚗</h1>
+  <div class="container">
+    <label for="make">Car Make</label>
+    <input id="make" placeholder="e.g. Toyota">
+
+    <label for="model">Car Model</label>
+    <input id="model" placeholder="e.g. Corolla">
+
+    <label for="year">Year</label>
+    <input type="number" id="year" placeholder="e.g. 2018">
+
+    <label for="efficiency">Fuel Efficiency (km/L)</label>
+    <input type="number" id="efficiency" placeholder="e.g. 15">
+
+    <label for="odometer">Odometer Reading (km)</label>
+    <input type="number" id="odometer" placeholder="e.g. 50000">
+
+    <label for="habit">Driving Habit</label>
+    <select id="habit">
+      <option>Light</option>
+      <option>Moderate</option>
+      <option>Heavy</option>
+    </select>
+
+    <label for="season">Current Season</label>
+    <select id="season">
+      <option>Spring</option>
+      <option>Summer</option>
+      <option>Autumn</option>
+      <option>Winter</option>
+    </select>
+
+    <button onclick="generateAdvice()">Get Maintenance Advice</button>
+    <button onclick="startSpeechInput()">🎤 Speak Now</button>
+    <button onclick="speakAdvice()">🔊 Speak Advice</button>
+
+    <div id="output" class="chat"></div>
+  </div>
+
+  <script>
+    let lastAdvice = "";
+
+    function calculateNextServiceDate(efficiency) {
+      const today = new Date();
+      let monthsToAdd = 2;
+
+      if (efficiency <= 10) monthsToAdd = 1.5;
+      else if (efficiency <= 15) monthsToAdd = 2;
+      else if (efficiency <= 20) monthsToAdd = 3;
+      else monthsToAdd = 3.5;
+
+      const future = new Date(today.setMonth(today.getMonth() + monthsToAdd));
+      return future.toLocaleDateString(undefined, {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+
+    function generateAdvice() {
+      const make = document.getElementById("make").value;
+      const model = document.getElementById("model").value;
+      const year = parseInt(document.getElementById("year").value);
+      const efficiency = parseFloat(document.getElementById("efficiency").value);
+      const habit = document.getElementById("habit").value;
+      const season = document.getElementById("season").value;
+      const odometer = parseInt(document.getElementById("odometer").value);
+
+      let tasks = [];
+
+      // Short Term
+      tasks.push("🛢️ Check oil & coolant monthly.");
+      tasks.push("🧼 Replace air filter every 15,000 km.");
+      tasks.push("🔧 Inspect tire pressure and tread monthly.");
+      tasks.push("💡 Test all exterior lights monthly.");
+
+      // Long Term based on mileage
+      if (odometer >= 50000) {
+        tasks.push("⚙️ Replace transmission fluid and filter.");
+        tasks.push("🔩 Replace spark plugs.");
+        tasks.push("🔄 Replace timing belt (if applicable).");
+      }
+      if (odometer >= 100000) {
+        tasks.push("🛠️ Replace water pump.");
+        tasks.push("🔧 Inspect and possibly replace suspension components.");
+        tasks.push("🔄 Replace drive belts.");
+      }
+      if (odometer >= 150000) {
+        tasks.push("⚡ Replace alternator.");
+        tasks.push("🔋 Replace battery.");
+        tasks.push("🛠️ Inspect and possibly replace engine mounts.");
+      }
+
+      // Car type specific maintenance
+      if (make.toLowerCase().includes("toyota")) {
+        tasks.push("🔧 Check and adjust valve clearance (if applicable).");
+        if (model.toLowerCase().includes("hybrid")) {
+          tasks.push("🔋 Inspect hybrid battery system.");
+          tasks.push("⚡ Check regenerative braking system.");
+        }
+      } else if (make.toLowerCase().includes("honda")) {
+        tasks.push("🔧 Check VTEC system (if applicable).");
+        tasks.push("🔄 Inspect timing chain.");
+      } else if (make.toLowerCase().includes("bmw")) {
+        tasks.push("🔧 Check VANOS system.");
+        tasks.push("🔄 Inspect timing chain.");
+        tasks.push("⚡ Check electronic systems and sensors.");
+      } else if (make.toLowerCase().includes("mercedes")) {
+        tasks.push("🔧 Check ABC suspension system (if equipped).");
+        tasks.push("⚡ Inspect SBC braking system.");
+        tasks.push("🔄 Check air suspension components.");
+      } else if (make.toLowerCase().includes("audi")) {
+        tasks.push("🔧 Check Quattro system.");
+        tasks.push("⚡ Inspect MMI system.");
+        tasks.push("🔄 Check timing chain tensioner.");
+      } else if (make.toLowerCase().includes("volkswagen")) {
+        tasks.push("🔧 Check DSG transmission (if equipped).");
+        tasks.push("⚡ Inspect electrical system.");
+        tasks.push("🔄 Check timing belt/chain.");
+      } else if (make.toLowerCase().includes("ford")) {
+        tasks.push("🔧 Check EcoBoost system (if equipped).");
+        tasks.push("⚡ Inspect SYNC system.");
+        tasks.push("🔄 Check transmission fluid.");
+      } else if (make.toLowerCase().includes("chevrolet")) {
+        tasks.push("🔧 Check Active Fuel Management system.");
+        tasks.push("⚡ Inspect OnStar system.");
+        tasks.push("🔄 Check transmission fluid.");
+      } else if (make.toLowerCase().includes("hyundai")) {
+        tasks.push("🔧 Check GDI system.");
+        tasks.push("⚡ Inspect Blue Link system.");
+        tasks.push("🔄 Check timing chain.");
+      } else if (make.toLowerCase().includes("kia")) {
+        tasks.push("🔧 Check GDI system.");
+        tasks.push("⚡ Inspect UVO system.");
+        tasks.push("🔄 Check timing chain.");
+      } else if (make.toLowerCase().includes("nissan")) {
+        tasks.push("🔧 Check CVT transmission.");
+        tasks.push("⚡ Inspect NissanConnect system.");
+        tasks.push("🔄 Check timing chain.");
+      } else if (make.toLowerCase().includes("mazda")) {
+        tasks.push("🔧 Check Skyactiv system.");
+        tasks.push("⚡ Inspect Mazda Connect system.");
+        tasks.push("🔄 Check timing chain.");
+      } else if (make.toLowerCase().includes("subaru")) {
+        tasks.push("🔧 Check Symmetrical AWD system.");
+        tasks.push("⚡ Inspect Starlink system.");
+        tasks.push("🔄 Check timing belt.");
+      } else if (make.toLowerCase().includes("lexus")) {
+        tasks.push("🔧 Check Variable Valve Timing system.");
+        tasks.push("⚡ Inspect Lexus Enform system.");
+        tasks.push("🔄 Check timing chain.");
+      } else if (make.toLowerCase().includes("acura")) {
+        tasks.push("🔧 Check SH-AWD system (if equipped).");
+        tasks.push("⚡ Inspect AcuraLink system.");
+        tasks.push("🔄 Check timing chain.");
+      } else if (make.toLowerCase().includes("infiniti")) {
+        tasks.push("🔧 Check Variable Valve Timing system.");
+        tasks.push("⚡ Inspect InTouch system.");
+        tasks.push("🔄 Check timing chain.");
+      } else if (make.toLowerCase().includes("maruti") || make.toLowerCase().includes("suzuki")) {
+        tasks.push("🔧 Check K-Series engine components.");
+        tasks.push("⚡ Inspect SmartPlay infotainment system.");
+        tasks.push("🔄 Check timing chain.");
+        if (model.toLowerCase().includes("swift")) {
+          tasks.push("🔧 Check SHVS mild hybrid system (if equipped).");
+        }
+        if (model.toLowerCase().includes("baleno")) {
+          tasks.push("🔧 Check Boosterjet engine components.");
+        }
+      } else if (make.toLowerCase().includes("tata")) {
+        tasks.push("🔧 Check Revotron engine components.");
+        tasks.push("⚡ Inspect Harman infotainment system.");
+        tasks.push("🔄 Check timing chain.");
+        if (model.toLowerCase().includes("nexon")) {
+          tasks.push("🔧 Check Ziptron electric powertrain (if EV).");
+        }
+        if (model.toLowerCase().includes("safari")) {
+          tasks.push("🔧 Check Terrain Response system.");
+        }
+      } else if (make.toLowerCase().includes("mahindra")) {
+        tasks.push("🔧 Check mStallion engine components.");
+        tasks.push("⚡ Inspect AdrenoX infotainment system.");
+        tasks.push("🔄 Check timing chain.");
+        if (model.toLowerCase().includes("xuv700")) {
+          tasks.push("🔧 Check AWD system (if equipped).");
+        }
+        if (model.toLowerCase().includes("thar")) {
+          tasks.push("🔧 Check 4x4 system components.");
+        }
+      } else if (make.toLowerCase().includes("hyundai india")) {
+        tasks.push("🔧 Check Kappa engine components.");
+        tasks.push("⚡ Inspect Blue Link connected car system.");
+        tasks.push("🔄 Check timing chain.");
+        if (model.toLowerCase().includes("creta")) {
+          tasks.push("🔧 Check HTK+ engine components.");
+        }
+        if (model.toLowerCase().includes("venue")) {
+          tasks.push("🔧 Check DCT transmission (if equipped).");
+        }
+      } else if (make.toLowerCase().includes("kia india")) {
+        tasks.push("🔧 Check Smartstream engine components.");
+        tasks.push("⚡ Inspect UVO connected car system.");
+        tasks.push("🔄 Check timing chain.");
+        if (model.toLowerCase().includes("seltos")) {
+          tasks.push("🔧 Check GT Line components (if equipped).");
+        }
+        if (model.toLowerCase().includes("carnival")) {
+          tasks.push("🔧 Check 8-speed automatic transmission.");
+        }
+      } else if (make.toLowerCase().includes("honda india")) {
+        tasks.push("🔧 Check Earth Dreams engine components.");
+        tasks.push("⚡ Inspect Honda Connect system.");
+        tasks.push("🔄 Check timing chain.");
+        if (model.toLowerCase().includes("city")) {
+          tasks.push("🔧 Check i-VTEC system.");
+        }
+      } else if (make.toLowerCase().includes("toyota india")) {
+        tasks.push("🔧 Check TNGA platform components.");
+        tasks.push("⚡ Inspect Toyota Connect system.");
+        tasks.push("🔄 Check timing chain.");
+        if (model.toLowerCase().includes("fortuner")) {
+          tasks.push("🔧 Check 4x4 system components.");
+        }
+        if (model.toLowerCase().includes("camry")) {
+          tasks.push("🔧 Check hybrid system components.");
+        }
+      }
+
+      // Efficiency based maintenance
+      if (efficiency < 12) {
+        tasks.push("🔩 Check and possibly replace spark plugs.");
+        tasks.push("🛢️ Consider using higher quality fuel.");
+        tasks.push("🔧 Check for any engine misfires.");
+      }
+
+      // Driving habit based maintenance
+      if (habit === "Heavy") {
+        tasks.push("🛠️ Rotate tires every 5,000 km.");
+        tasks.push("🛢️ Change oil more frequently (every 5,000 km).");
+        tasks.push("🔧 Inspect brakes more frequently.");
+      } else if (habit === "Light") {
+        tasks.push("🔋 Battery test every 6 months.");
+        tasks.push("🛢️ Check for oil condensation in engine.");
+      }
+
+      // Seasonal maintenance
+      if (season === "Winter") {
+        tasks.push("❄️ Install winter tires for icy conditions.");
+        tasks.push("🧊 Use antifreeze mix (50/50) and check coolant level.");
+        tasks.push("🧽 Lift wipers to avoid freezing overnight.");
+      } else if (season === "Summer") {
+        tasks.push("☀️ Check A/C system for proper function.");
+        tasks.push("🔥 Watch coolant levels during long drives.");
+      }
+
+      const nextDate = calculateNextServiceDate(efficiency);
+      tasks.push(`📅 Next recommended service date: ${nextDate}`);
+
+      const introOptions = [
+        `Hey there! Here's your maintenance checklist for the ${year} ${make} ${model} with ${odometer.toLocaleString()} km:`,
+        `Let's keep your ${make} running like new. Here's what I suggest for your ${odometer.toLocaleString()} km vehicle:`,
+        `Based on your ${make} ${model} with ${odometer.toLocaleString()} km, here's your custom maintenance plan:`
+      ];
+      const intro = introOptions[Math.floor(Math.random() * introOptions.length)];
+
+      const finalMessage = `<p>${intro}</p><ul>${tasks.map(t => `<li>${t}</li>`).join('')}</ul><p>✅ Stay safe and drive smart!</p>`;
+      lastAdvice = `${intro} ${tasks.join(", ")}`;
+      document.getElementById("output").innerHTML = finalMessage;
+    }
+
+    function speakAdvice() {
+      if (!lastAdvice) return alert("Please generate advice first.");
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(lastAdvice);
+      utterance.rate = 1;
+      synth.speak(utterance);
+    }
+
+    function startSpeechInput() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Sorry, your browser doesn't support speech recognition.");
+        return;
+      }
+
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        console.log("Recognized:", transcript);
+
+        // Basic parsing — extendable
+        if (transcript.includes("toyota")) document.getElementById("make").value = "Toyota";
+        if (transcript.includes("corolla")) document.getElementById("model").value = "Corolla";
+        const yearMatch = transcript.match(/\b(20[0-2][0-9]|19[9-9][0-9])\b/);
+        if (yearMatch) document.getElementById("year").value = yearMatch[0];
+        const kmMatch = transcript.match(/(\d{1,2})\s?(km|kilometers|kilometres|kml)/);
+        if (kmMatch) document.getElementById("efficiency").value = kmMatch[1];
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        alert("Speech recognition failed.");
+      };
+
+      recognition.start();
+    }
+  </script>
+</body>
+</html>
